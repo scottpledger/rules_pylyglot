@@ -6,14 +6,24 @@ import subprocess
 import sys
 
 
-def _run(command: list[str]) -> subprocess.CompletedProcess[str]:
+_EXPECTED_OUTPUT = "Hello pylyglot generated ab transitive py3 one two"
+
+
+def _run(
+    command: list[str],
+    *,
+    allow_output_prefix: bool = False,
+) -> subprocess.CompletedProcess[str]:
     result = subprocess.run(command, check=False, capture_output=True, text=True)
     if result.returncode:
         raise AssertionError(
             f"{command!r} returned {result.returncode}\n"
             f"stdout:\n{result.stdout}\nstderr:\n{result.stderr}"
         )
-    if result.stdout.strip() != "Hello pylyglot generated ab transitive py3 one two":
+    output = result.stdout.strip()
+    if allow_output_prefix:
+        output = output.splitlines()[-1] if output else ""
+    if output != _EXPECTED_OUTPUT:
         raise AssertionError(f"unexpected stdout from {command!r}: {result.stdout!r}")
     return result
 
@@ -65,12 +75,13 @@ def main() -> None:
         _run(["cmd.exe", "/d", "/c", str(package / "multiplat.cmd"), "one", "two"])
         _expect_exit(["cmd.exe", "/d", "/c", str(package / "multiplat.cmd"), "--fail"])
         posix_first = _run(
-            ["cmd.exe", "/d", "/c", str(package / "posix_first.cmd"), "one", "two"]
+            ["cmd.exe", "/d", "/c", str(package / "posix_first.cmd"), "one", "two"],
+            allow_output_prefix=True,
         )
         _expect_exit(
             ["cmd.exe", "/d", "/c", str(package / "posix_first.cmd"), "--fail"]
         )
-        if not posix_first.stderr:
+        if "#!/bin/sh" not in posix_first.stdout:
             raise AssertionError("POSIX-first Windows execution should document its shebang")
         _run(
             ["cmd.exe", "/d", "/c", str(package / "windows_first.cmd"), "one", "two"]

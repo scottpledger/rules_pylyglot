@@ -59,8 +59,8 @@ repository.
 
 Produces one `<name>.cmd` that starts with a POSIX shebang. It executes directly
 on POSIX and as a native batch file on Windows. Because `cmd.exe` attempts to
-interpret the shebang before reaching `@echo off`, Windows emits one harmless
-diagnostic on stderr.
+interpret the shebang before reaching `@echo off`, Windows echoes that line once
+on standard output before running the payload.
 
 ### `pylyglot_windows_first_binary`
 
