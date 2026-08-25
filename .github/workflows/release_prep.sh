@@ -8,8 +8,8 @@ TAG=$1
 # The prefix is chosen to match what GitHub generates for source archives
 # This guarantees that users can easily switch from a released artifact to a source archive
 # with minimal differences in their code (e.g. strip_prefix remains the same)
-PREFIX="rules_mylang-${TAG:1}"
-ARCHIVE="rules_mylang-$TAG.tar.gz"
+PREFIX="rules_pylyglot-${TAG:1}"
+ARCHIVE="rules_pylyglot-$TAG.tar.gz"
 
 # NB: configuration for 'git archive' is in /.gitattributes
 git archive --format=tar --prefix=${PREFIX}/ ${TAG} | gzip > $ARCHIVE
@@ -29,6 +29,6 @@ cat << EOF
 Add to your \`MODULE.bazel\` file:
 
 \`\`\`starlark
-bazel_dep(name = "com_myorg_rules_mylang", version = "${TAG:1}")
+bazel_dep(name = "rules_pylyglot", version = "${TAG:1}")
 \`\`\`
 EOF

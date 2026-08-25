@@ -23,7 +23,7 @@ jobs:
     # https://github.com/bazel-contrib/.github/blob/master/.github/workflows/release_ruleset.yaml
     uses: bazel-contrib/.github/.github/workflows/release_ruleset.yaml@v7.7.0
     with:
-      release_files: rules_mylang-*.tar.gz
+      release_files: rules_pylyglot-*.tar.gz
       prerelease: false
       # Open the release as a draft to support immutable GitHub releases.
       # Attestations will be uploaded to the draft in publish.yaml.
