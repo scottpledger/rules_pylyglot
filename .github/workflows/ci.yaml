@@ -13,11 +13,15 @@ concurrency:
   # See https://docs.github.com/en/actions/using-jobs/using-concurrency and https://docs.github.com/en/actions/learn-github-actions/contexts for more info.
   group: concurrency-group::${{ github.workflow }}::${{ github.event.pull_request.number > 0 && format('pr-{0}', github.event.pull_request.number) || github.ref_name }}${{ github.ref_name == 'main' && format('::{0}', github.run_id) || ''}}
   cancel-in-progress: ${{ github.ref_name != 'main' }}
+permissions:
+  actions: read
+  contents: read
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
         bazel: ["8.x", "9.x"]
         folder:
           - .
@@ -35,6 +39,7 @@ jobs:
           disk-cache: ${{ github.workflow }}
           repository-cache: true
           bazelrc: |
+            ${{ startsWith(matrix.os, 'windows') && 'startup --windows_enable_symlinks' || '' }}
             ${{ matrix.folder == '.' && 'common --config=ci ' || '' }}
             ${{ matrix.folder == '.' && !startsWith(matrix.bazel, '9.') && 'common --lockfile_mode=update' || '' }}
       - run: bazel test //...

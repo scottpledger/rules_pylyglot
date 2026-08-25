@@ -1,0 +1,27 @@
+load("@bazel_lib//:bzl_library.bzl", "bzl_library")
+load("@rules_python//python:defs.bzl", "py_binary")
+
+package(default_visibility = ["//pylyglot:__pkg__"])
+
+py_binary(
+    name = "bundler",
+    srcs = ["bundler.py"],
+    legacy_create_init = 0,
+    main = "bundler.py",
+    python_version = "3.11",
+)
+
+bzl_library(
+    name = "modules_aspect",
+    srcs = ["modules_aspect.bzl"],
+    deps = ["@rules_python//python:py_info_bzl"],
+)
+
+bzl_library(
+    name = "pylyglot_bundle",
+    srcs = ["pylyglot_bundle.bzl"],
+    deps = [
+        ":modules_aspect",
+        "@rules_python//python:py_info_bzl",
+    ],
+)

@@ -1,0 +1,151 @@
+load("@bazel_skylib//rules:write_file.bzl", "write_file")
+load("@rules_python//python:defs.bzl", "py_library", "py_test")
+load(
+    "//pylyglot:defs.bzl",
+    "pylyglot_multiplat_bundle",
+    "pylyglot_posix_first_binary",
+    "pylyglot_windows_first_binary",
+)
+load(":failure_tests.bzl", "empty_py_library", "failure_test")
+
+py_library(
+    name = "nested_base",
+    srcs = [
+        "third_party_layout/pkg2/__init__.py",
+        "third_party_layout/pkg2/value.py",
+    ],
+)
+
+py_library(
+    name = "nested_wrapper",
+    imports = ["third_party_layout"],
+    deps = [":nested_base"],
+)
+
+py_library(
+    name = "fixture_lib",
+    srcs = [
+        "pkg/__init__.py",
+        "pkg/cycle_a.py",
+        "pkg/cycle_b.py",
+        "pkg/dynamic.py",
+        "pkg/messages.py",
+        "pkg/parts.py",
+    ],
+    imports = ["."],
+    deps = [":nested_wrapper"],
+)
+
+write_file(
+    name = "generated_source",
+    out = "generated.py",
+    content = [
+        "def suffix():",
+        "    return \"generated\"",
+    ],
+)
+
+pylyglot_multiplat_bundle(
+    name = "multiplat",
+    srcs = [
+        "py3pkg/__init__.py3",
+        "py3pkg/module.py",
+        ":generated_source",
+    ],
+    imports = ["."],
+    main = "main.py",
+    module_mappings = {
+        "pylyglot/tests/generated.py": "generated",
+    },
+    deps = [":fixture_lib"],
+)
+
+pylyglot_posix_first_binary(
+    name = "posix_first",
+    srcs = [
+        "py3pkg/__init__.py3",
+        "py3pkg/module.py",
+        ":generated_source",
+    ],
+    imports = ["."],
+    main = "main.py",
+    module_mappings = {
+        "pylyglot/tests/generated.py": "generated",
+    },
+    deps = [":fixture_lib"],
+)
+
+pylyglot_windows_first_binary(
+    name = "windows_first",
+    srcs = [
+        "py3pkg/__init__.py3",
+        "py3pkg/module.py",
+        ":generated_source",
+    ],
+    imports = ["."],
+    main = "main.py",
+    module_mappings = {
+        "pylyglot/tests/generated.py": "generated",
+    },
+    deps = [":fixture_lib"],
+)
+
+pylyglot_multiplat_bundle(
+    name = "duplicate_modules",
+    srcs = [
+        "duplicate_a.py",
+        "duplicate_b.py",
+    ],
+    main = "main.py",
+    module_mappings = {
+        "pylyglot/tests/duplicate_a.py": "duplicate",
+        "pylyglot/tests/duplicate_b.py": "duplicate",
+    },
+    tags = ["manual"],
+)
+
+failure_test(
+    name = "duplicate_modules_test",
+    expected_message = "maps to both",
+    target_under_test = ":duplicate_modules",
+)
+
+pylyglot_multiplat_bundle(
+    name = "namespace_package",
+    srcs = ["namespace/module.py"],
+    imports = ["."],
+    main = "main.py",
+    tags = ["manual"],
+)
+
+failure_test(
+    name = "namespace_package_test",
+    expected_message = "namespace packages are unsupported",
+    target_under_test = ":namespace_package",
+)
+
+empty_py_library(name = "source_less_library")
+
+pylyglot_multiplat_bundle(
+    name = "source_less_bundle",
+    main = "main.py",
+    tags = ["manual"],
+    deps = [":source_less_library"],
+)
+
+failure_test(
+    name = "source_less_bundle_test",
+    expected_message = "exposes no original Python source",
+    target_under_test = ":source_less_bundle",
+)
+
+py_test(
+    name = "bundle_test",
+    srcs = ["bundle_test.py"],
+    data = [
+        ":multiplat",
+        ":posix_first",
+        ":windows_first",
+    ],
+    legacy_create_init = 0,
+)
