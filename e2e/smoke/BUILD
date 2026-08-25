@@ -3,15 +3,28 @@ Add a basic smoke-test target below.
 """
 
 load("@bazel_skylib//rules:build_test.bzl", "build_test")
-# load("@rules_pylyglot//pylyglot:defs.bzl", "...")
+load("@rules_pylyglot//pylyglot:defs.bzl", "pylyglot_multiplat_bundle")
+load("@rules_python//python:defs.bzl", "py_library", "py_test")
 
-# Replace with a usage of your rule/macro
-filegroup(name = "empty")
+py_library(
+    name = "message",
+    srcs = ["message.py"],
+)
+
+pylyglot_multiplat_bundle(
+    name = "smoke_bundle",
+    main = "main.py",
+    deps = [":message"],
+)
 
 build_test(
+    name = "smoke_build_test",
+    targets = [":smoke_bundle"],
+)
+
+py_test(
     name = "smoke_test",
-    targets = [
-        # targets you add above
-        ":empty",
-    ],
+    srcs = ["smoke_test.py"],
+    data = [":smoke_bundle"],
+    legacy_create_init = 0,
 )

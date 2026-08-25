@@ -15,9 +15,10 @@ concurrency:
   cancel-in-progress: ${{ github.ref_name != 'main' }}
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
         bazel: ["8.x", "9.x"]
         folder:
           - .
@@ -35,6 +36,7 @@ jobs:
           disk-cache: ${{ github.workflow }}
           repository-cache: true
           bazelrc: |
+            ${{ startsWith(matrix.os, 'windows') && 'startup --windows_enable_symlinks' || '' }}
             ${{ matrix.folder == '.' && 'common --config=ci ' || '' }}
             ${{ matrix.folder == '.' && !startsWith(matrix.bazel, '9.') && 'common --lockfile_mode=update' || '' }}
       - run: bazel test //...
