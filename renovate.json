@@ -13,6 +13,13 @@
     {
       "matchFiles": ["MODULE.bazel"],
       "enabled": false
+    },
+    {
+      "description": "Automerge non-major dependency updates",
+      "matchUpdateTypes": ["digest", "pin", "pinDigest", "patch", "minor"],
+      "automerge": true,
+      "automergeType": "pr",
+      "platformAutomerge": true
     }
   ]
 }
